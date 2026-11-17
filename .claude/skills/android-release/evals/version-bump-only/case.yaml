@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: version-bump-only
+expected_outcome: |
+  Runs in a copy of the Audio Quran repo (versionCode 1, versionName "1.0"). app/build.gradle.kts ends
+  up with versionCode 2 and versionName "2.0.0" and no other change. No Gradle build is run, nothing is
+  committed or tagged, and the response shows the change.

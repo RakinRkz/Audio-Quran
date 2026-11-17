@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: github-release-after-confirm
+expected_outcome: |
+  Runs in a copy of the Audio Quran repo with release signing already committed, keystore.properties
+  pointing at a test keystore, and origin pointing at a local bare repository standing in for GitHub
+  (the run is told to write its gh release command to a file instead of executing it). The version
+  becomes 1.0.1 / versionCode 2, a signed release is built and verified, the commit and an annotated
+  v1.0.1 tag are pushed to origin before the release is created, and the gh release create command
+  targets v1.0.1 with --verify-tag, attaches the signed APK (not the .aab or mapping.txt), and includes
+  install notes for people sideloading the APK.

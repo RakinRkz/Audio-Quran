@@ -1,0 +1,9 @@
+schema_version: "1.1"
+name: signed-minor-release
+expected_outcome: |
+  Runs in a copy of the Audio Quran repo where the release signingConfig is already committed and
+  keystore.properties points at a test keystore outside the repo. Version goes from 1.0 to 1.1.0 with
+  versionCode 2. A clean release build produces a signed app-release.apk and app-release.aab; both
+  signatures are verified and the certificate fingerprint is reported. The .aab, .apk and mapping.txt are
+  copied to dist/v1.1.0/, the bump is committed and tagged v1.1.0 locally, nothing is pushed, and the user
+  is asked before pushing. keystore.properties and dist/ are not committed.

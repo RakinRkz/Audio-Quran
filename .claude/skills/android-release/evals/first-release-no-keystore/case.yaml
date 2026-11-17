@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: first-release-no-keystore
+expected_outcome: |
+  Runs in a copy of the Audio Quran repo where no release signing exists yet and no keystore exists.
+  The version becomes versionCode 2 / versionName 1.0.1. A release signingConfig that reads
+  keystore.properties (and falls back to unsigned when it is missing) is added to app/build.gradle.kts,
+  keystore.properties is added to .gitignore, and a keystore.properties with placeholder values (no real
+  passwords) may be written. Claude does not create the real release keystore itself; it gives the user
+  the keytool command to run in their own terminal, explains the key must be backed up, and does not claim
+  a signed release was produced. Nothing is pushed.
