@@ -10,6 +10,8 @@ import com.audioquran.data.repository.AudioFileRepository
 import com.audioquran.data.repository.FuzzySearch
 import com.audioquran.data.repository.PreferencesRepository
 import com.audioquran.player.AudioPlayerController
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,8 +31,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _surahList = MutableStateFlow<List<Surah>>(emptyList())
     val surahList: StateFlow<List<Surah>> = _surahList.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
+    // Starts true so the UI shows the loading screen (not the folder picker)
+    // until the saved folder preference has been read on startup.
+    private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    // Folder currently loaded or being loaded, and the job doing it.
+    private var loadedFolderUri: Uri? = null
+    private var loadJob: Job? = null
 
     private val _hasPermission = MutableStateFlow(false)
     val hasPermission: StateFlow<Boolean> = _hasPermission.asStateFlow()
@@ -57,7 +65,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun observeSavedFolder() {
         viewModelScope.launch {
             preferencesRepository.audioFolderUri.collect { uri ->
-                if (uri != null) {
+                if (uri == null) {
+                    // Nothing saved yet: stop the startup loading state so the
+                    // folder selection screen can show.
+                    if (loadJob?.isActive != true) _isLoading.value = false
+                } else if (uri != loadedFolderUri) {
+                    // Skip if onFolderSelected already started loading this folder.
                     _hasFolderSelected.value = true
                     loadAudioFiles(uri)
                 }
@@ -70,14 +83,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onFolderSelected(uri: Uri) {
+        // Switch to the loading screen right away, before the preference write,
+        // so the user gets immediate feedback after picking a folder.
+        _hasFolderSelected.value = true
+        loadAudioFiles(uri)
         viewModelScope.launch {
             preferencesRepository.saveAudioFolderUri(uri)
-            _hasFolderSelected.value = true
-            loadAudioFiles(uri)
         }
     }
 
     fun changeFolder() {
+        loadJob?.cancel()
+        loadJob = null
+        loadedFolderUri = null
+        _isLoading.value = false
         viewModelScope.launch {
             preferencesRepository.clearAudioFolderUri()
             _hasFolderSelected.value = false
@@ -89,9 +108,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun loadAudioFiles(folderUri: Uri) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            _errorMessage.value = null
+        loadJob?.cancel()
+        loadedFolderUri = folderUri
+        _isLoading.value = true
+        _errorMessage.value = null
+        loadJob = viewModelScope.launch {
             try {
                 val files = audioFileRepository.scanFolder(folderUri)
                 if (files.isEmpty()) {
@@ -108,11 +129,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         FuzzySearch.searchSurahs(files, _searchQuery.value)
                     }
                 }
+            } catch (e: CancellationException) {
+                // A newer load replaced this one; it owns the loading flag now.
+                throw e
             } catch (e: Exception) {
                 _errorMessage.value = "Error loading audio files: ${e.message}"
-            } finally {
-                _isLoading.value = false
             }
+            _isLoading.value = false
         }
     }
 

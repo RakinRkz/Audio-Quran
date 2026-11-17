@@ -342,9 +342,19 @@ private fun LoadingScreen() {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Scanning for audio files...",
+            text = "Loading Surahs...",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Reading audio files from your folder. This may take a few seconds.",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
         )
     }
 }
