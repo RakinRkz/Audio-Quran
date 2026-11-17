@@ -20,6 +20,8 @@ Use `./gradlew` (Git Bash) or `gradlew.bat` (PowerShell/cmd).
 ./gradlew test --tests "com.audioquran.SomeTest.someMethod"   # single unit test
 ```
 
+CI (`.github/workflows/android-ci.yml`) runs `assembleDebug lintDebug testDebugUnitTest` on every PR to `main` and every push to `main`, and uploads the debug APK and lint/test reports as artifacts. Lint errors fail the build.
+
 There are no tests yet: `app/src/test` and `app/src/androidTest` don't exist. JUnit4, Espresso and Compose ui-test are already declared as dependencies.
 
 ## Architecture
